@@ -5,7 +5,8 @@ FROM php:8.3-fpm
 RUN apt-get update && apt-get install -y \
     git \
     ffmpeg \
-    procps
+    procps \
+    default-mysql-client
 
 # installing unzip dependencies
 RUN apt-get install -y \
@@ -49,23 +50,26 @@ RUN npm install -g laravel-echo-server
 
 # arguments
 ARG container_project_path
-ARG uid
-ARG user
 
 # copy php-fpm pool configuration
 COPY ./.configs/nginx/pools/www.cnf /usr/local/etc/php-fpm.d/www.conf
 
-# adding user
-RUN useradd -G www-data,root -u $uid -d /home/$user $user
-RUN mkdir -p /home/$user/.composer && \
-    chown -R $user:$user /home/$user
+# install bagisto directly into the image so compose platforms can boot it without host-side scripts
+RUN mkdir -p ${container_project_path} && \
+    git clone --branch v2.3.6 --depth 1 https://github.com/bagisto/bagisto.git ${container_project_path}bagisto
 
-# setting up project from `src` folder
-RUN chmod -R 775 $container_project_path
-RUN chown -R $user:www-data $container_project_path
+WORKDIR ${container_project_path}bagisto
 
-# changing user
-USER $user
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# setting work directory
-WORKDIR $container_project_path
+COPY ./.configs/.env ${container_project_path}bagisto/.env
+COPY ./.configs/.env.testing ${container_project_path}bagisto/.env.testing
+COPY ./docker/entrypoint.sh /usr/local/bin/bagisto-entrypoint.sh
+
+RUN chmod +x /usr/local/bin/bagisto-entrypoint.sh && \
+    mkdir -p /var/www/.composer && \
+    chown -R www-data:www-data ${container_project_path} /var/www/.composer && \
+    chmod -R 775 ${container_project_path}
+
+ENTRYPOINT ["/usr/local/bin/bagisto-entrypoint.sh"]
+CMD ["php-fpm"]

@@ -61,11 +61,13 @@ However, there may be some specific cases where adjustments are necessary. We re
         - php-fpm
   ```
 
-- In this repository, the initial focus was on meeting all project requirements. Whether your project is new or pre-existing, you can easily copy and paste it into the designated workspace directory. If you’re unsure where to begin, a shell script has been provided to streamline the setup process for you. To install and set up everything, simply run:
+- In this repository, the initial focus was on meeting all project requirements. Whether your project is new or pre-existing, you can easily copy and paste it into the designated workspace directory. If you’re unsure where to begin, a shell script has been provided to streamline the setup process for you. To install and set up everything locally, simply run:
 
   ```sh
   sh setup.sh
   ```
+
+- For platforms like Coolify, use the compose deployment directly. The PHP image now includes Bagisto and performs first-start initialization automatically, so `setup.sh` is not required for server deployments.
 
 ## After installation
 
